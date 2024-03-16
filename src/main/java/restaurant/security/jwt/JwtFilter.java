@@ -1,33 +1,23 @@
-package lms.exceptions.jwt;
-
+package restaurant.security.jwt;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lms.entities.Instructor;
-import lms.entities.Student;
-import lms.repository.InstructorRepo;
-import lms.repository.StudentRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import restaurant.entities.User;
+import restaurant.repository.UserRepo;
 import java.io.IOException;
-
-/**
- * @author Mukhammed Asantegin
- */
-
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
-    private final StudentRepo studentRepo;
-    private final InstructorRepo instructorRepo;
+    private final UserRepo userRepo;;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -44,35 +34,22 @@ public class JwtFilter extends OncePerRequestFilter {
 
             try {
                 String email = jwtService.verifyToken(token);
-                Student student = studentRepo.getByEmail(email);
-                if (student != null) {
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(
-                                    new UsernamePasswordAuthenticationToken(
-                                            student.getEmail(),
-                                            null,
-                                            student.getAuthorities()
-                                    )
-                            );
-                } else {
-                    String emailInst = jwtService.verifyToken(token);
-                    Instructor instructor = instructorRepo.getByEmail(emailInst);
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(
-                                    new UsernamePasswordAuthenticationToken(
-                                            instructor.getEmail(),
-                                            null,
-                                            instructor.getAuthorities()
-                                    )
-                            );
-                }
+                User user = userRepo.findByEmail(email).get();
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(
+                                new UsernamePasswordAuthenticationToken(
+                                        user.getEmail(),
+                                        null,
+                                        user.getAuthorities()
+                                )
+                        );
 
             } catch (JWTVerificationException e) {
-                response.sendError(400);
+                response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                        "Invalid JWT Token");
             }
-
         }
-
         filterChain.doFilter(request, response);
     }
 }

@@ -1,2 +1,4 @@
-package restaurant.service;public interface MenuitemSerivice {
+package restaurant.service;
+
+public interface MenuitemService {
 }

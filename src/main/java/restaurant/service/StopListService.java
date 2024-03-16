@@ -1,2 +1,4 @@
-package restaurant.service;public interface StopListService {
+package restaurant.service;
+
+public interface StopListService {
 }

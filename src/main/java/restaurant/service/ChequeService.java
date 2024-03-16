@@ -1,2 +1,4 @@
-package restaurant.service;public interface ChequeService {
+package restaurant.service;
+
+public interface ChequeService {
 }

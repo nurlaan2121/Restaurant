@@ -1,2 +1,4 @@
-package restaurant.service;public interface CategoryService {
+package restaurant.service;
+
+public interface CategoryService {
 }
