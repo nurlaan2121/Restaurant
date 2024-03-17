@@ -141,8 +141,8 @@ public class UserImpl implements UserService {
     public SimpleResponse deleteById(Long userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User adminOrDev = userRepo.findByEmail(authentication.getName()).orElseThrow(() -> new RuntimeException("YOUR TOKEN INVALID"));
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adminOrDev.getEmail());
         if (adminOrDev.getRole().equals(Role.ADMIN)) {
-            Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adminOrDev.getEmail());
             User searchUser = myFindById(userId);
             if (!restWithAdmin.getUsers().contains(searchUser))
                 return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("You no can deleted this user : " + userId).build();
@@ -152,9 +152,11 @@ public class UserImpl implements UserService {
                 removeChequeRepo.save(new RemoveUsersCheques(searchUser.getEmail(), searchUserCheques.get(i).getPriceAverage(), searchUserCheques.get(i).getCreatedAdCheque(), foods));
             }
             chequeRepo.deleteAll(searchUserCheques);
+            restWithAdmin.getUsers().remove(searchUser);
             userRepo.delete(searchUser);
             return SimpleResponse.builder().httpStatus(HttpStatus.ACCEPTED).message("Success deleted user: " + searchUser.getName()).build();
         }
+        //for dev using
         User searchUser = myFindById(userId);
         List<Cheque> searchUserCheques = searchUser.getCheques();
         for (int i = 0; i < searchUserCheques.size(); i++) {
@@ -162,6 +164,7 @@ public class UserImpl implements UserService {
             removeChequeRepo.save(new RemoveUsersCheques(searchUser.getEmail(), searchUserCheques.get(i).getPriceAverage(), searchUserCheques.get(i).getCreatedAdCheque(), foods));
         }
         chequeRepo.deleteAll(searchUserCheques);
+        restWithAdmin.getUsers().remove(searchUser);
         userRepo.delete(searchUser);
         return SimpleResponse.builder().httpStatus(HttpStatus.ACCEPTED).message("Success deleted user: " + searchUser.getName()).build();
     }

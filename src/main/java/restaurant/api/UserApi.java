@@ -45,11 +45,11 @@ public class UserApi {
         return userService.updateUserById(upUsId,userRequest);
     }
     @Secured({"ADMIN"})
-    @GetMapping("getAll")
+    @GetMapping("/getAll")
     public UserPagination getAll(@RequestParam(defaultValue = "1") int page,@RequestParam(defaultValue = "4") int size){
         return userService.getAll(page,size);
     }
-    @PostMapping("requestForRest/{restId}")
+    @PostMapping("/requestForRest/{restId}")
     public SimpleResponse requestForRest(@PathVariable Long restId, @RequestBody @Valid UserReqForRest userReq, @RequestParam Role role){
         return userService.reqForRest(restId,userReq,role);
     }

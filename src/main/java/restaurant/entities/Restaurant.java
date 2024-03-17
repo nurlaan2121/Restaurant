@@ -31,6 +31,8 @@ public class Restaurant extends BaseEntity{
     private User admin;
     @OneToMany
     private List<User> requests = new ArrayList<>();
+    @OneToMany(cascade = {CascadeType.REMOVE})
+    private List<Category> categories = new ArrayList<>();
 
     public Restaurant(String name, String location,Long servicePro) {
         this.name = name;
