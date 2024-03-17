@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import restaurant.dto.response.UserPaginationForReq;
+import restaurant.dto.response.UserResForPagination;
 import restaurant.dto.response.UserResponse;
 import restaurant.enums.Role;
 
@@ -32,6 +34,7 @@ public class User extends BaseEntity implements UserDetails {
     private Long experience;
     @OneToMany()
     private List<Cheque> cheques = new ArrayList<>();
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -78,12 +81,29 @@ public class User extends BaseEntity implements UserDetails {
         this.password = password;
     }
 
-    public User(String email, String password,Role role) {
+    public User(String email, String password, Role role) {
         this.email = email;
         this.password = password;
         this.role = role;
     }
-    public UserResponse convert(){
-        return new UserResponse(this.firstName,this.lastName,this.dateOfBirth,this.email,this.phoneNumber,this.role,this.experience);
+
+    public UserResponse convert() {
+        return new UserResponse(this.firstName, this.lastName, this.dateOfBirth, this.email, this.phoneNumber, this.role, this.experience);
     }
+
+    public UserResForPagination convertForRes() {
+        return new UserResForPagination(this.firstName, this.lastName, this.dateOfBirth, this.email, this.phoneNumber, this.role, this.experience, (long) cheques.size());
+    }public UserPaginationForReq convertForReq() {
+        return new UserPaginationForReq(super.getId(),this.email,this.dateOfBirth,this.experience,this.phoneNumber,this.password);
+    }
+
+    public User(String email, LocalDate dateOfBirth, Long experience, String phoneNumber, String password, Role role) {
+        this.dateOfBirth = dateOfBirth;
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
+        this.experience = experience;
+    }
+
 }

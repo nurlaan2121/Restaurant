@@ -33,7 +33,7 @@ public class SpringSecurity {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(request -> {
             request
-                    .requestMatchers("/auth/api/**").permitAll()
+                    .requestMatchers("/api/auth/**").permitAll()
                     .anyRequest().permitAll();
         });
         http.csrf(AbstractHttpConfigurer::disable);

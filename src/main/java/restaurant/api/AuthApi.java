@@ -19,17 +19,10 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class AuthApi {
     private final UserService userService;
-
-
-    @PostMapping("/saveUser")
-    public SimpleResponse signUp(@RequestBody @Valid UserRequest userRequest, Principal principal) {
-        log.info("APIIIIIIIIIIIIIIIIII");
-        return userService.signUp(principal, userRequest);
-    }
-
     @PutMapping("/signIn")
     private SignInResponse signIn(@RequestBody @Valid SignInReq signInReq) {
         log.info("APIIIIIIIIIIIIIIIIII");
         return userService.signIn(signInReq);
     }
+
 }

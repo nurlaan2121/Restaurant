@@ -2,9 +2,8 @@ package restaurant.service;
 
 import restaurant.dto.request.RestaurantReq;
 import restaurant.dto.request.UpdateRestReq;
-import restaurant.dto.response.RestaurantPagination;
-import restaurant.dto.response.RestaurantResponse;
-import restaurant.dto.response.SimpleResponse;
+import restaurant.dto.response.*;
+import restaurant.enums.ActionForReq;
 import restaurant.enums.RestaurantType;
 
 public interface RestaurantService {
@@ -13,10 +12,18 @@ public interface RestaurantService {
     RestaurantPagination getAll(int page, int size);
 
     RestaurantResponse findById(Long restId);
+    RestaurantResponse findById();
 
     SimpleResponse deleteById(Long resId);
 
-    SimpleResponse updateById(Long restId, UpdateRestReq updateRestReq, RestaurantType restaurantType);
+    SimpleResponse updateById(UpdateRestReq updateRestReq, RestaurantType restaurantType);
+    SimpleResponse updateById(Long restId,UpdateRestReq updateRestReq, RestaurantType restaurantType);
 
     String checkVacancy(Long restId);
+
+    SimpleResponse delete();
+
+    PaginationUserReq getAllReq(int page, int size);
+
+    SimpleResponse reqAccOrRem(Long reqId, ActionForReq action);
 }

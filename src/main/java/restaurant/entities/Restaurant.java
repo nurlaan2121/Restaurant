@@ -21,12 +21,16 @@ public class Restaurant extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private RestaurantType type;
     private Long servicePro;
-    @OneToMany(cascade = {CascadeType.REMOVE})
+    @OneToMany(cascade = {CascadeType.REMOVE,CascadeType.PERSIST})
     private List<User> users = new ArrayList<>();
     @OneToMany(cascade = CascadeType.REMOVE)
     private List<Menuitem> menuitemList = new ArrayList<>();
-    @OneToOne(cascade = {CascadeType.REMOVE})
+    @OneToMany(cascade = {CascadeType.REMOVE})
+    private List<RemoveUsersCheques> removeUsersCheques = new ArrayList<>();
+    @OneToOne(cascade = {CascadeType.REMOVE,CascadeType.PERSIST})
     private User admin;
+    @OneToMany
+    private List<User> requests = new ArrayList<>();
 
     public Restaurant(String name, String location,Long servicePro) {
         this.name = name;

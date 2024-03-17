@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import restaurant.entities.User;
+import restaurant.exceptions.NotFoundException;
 import restaurant.repository.UserRepo;
 import java.io.IOException;
 @Component
@@ -34,7 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             try {
                 String email = jwtService.verifyToken(token);
-                User user = userRepo.findByEmail(email).get();
+                User user = userRepo.findByEmail(email).orElseThrow(()-> new NotFoundException("DO filter internal:"  + email));
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(

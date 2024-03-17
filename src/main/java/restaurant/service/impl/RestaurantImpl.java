@@ -1,19 +1,22 @@
 package restaurant.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import restaurant.dto.request.RestaurantReq;
 import restaurant.dto.request.UpdateRestReq;
-import restaurant.dto.response.RestaurantPagination;
-import restaurant.dto.response.RestaurantResponse;
-import restaurant.dto.response.SimpleResponse;
+import restaurant.dto.request.UserReqForRest;
+import restaurant.dto.response.*;
 import restaurant.entities.Restaurant;
 import restaurant.entities.User;
+import restaurant.enums.ActionForReq;
 import restaurant.enums.RestaurantType;
 import restaurant.enums.Role;
 import restaurant.exceptions.NotFoundException;
@@ -30,6 +33,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RestaurantImpl implements RestaurantService {
     private final RestaurantRepo restaurantRepo;
     private final MenuitemRepo menuitemRepo;
@@ -49,6 +53,7 @@ public class RestaurantImpl implements RestaurantService {
         restaurant.setType(restaurantType);
         restaurantRepo.save(restaurant);
         restaurant.setAdmin(admin);
+        restaurant.getUsers().add(admin);
         return SimpleResponse.builder().
                 httpStatus(HttpStatus.ACCEPTED).
                 message("Restaurant with name: " + restaurantReq.getName() + "  success saved").
@@ -74,29 +79,114 @@ public class RestaurantImpl implements RestaurantService {
         return restaurantRepo.findById(restId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + restId)).convert();
     }
 
-    @Override @Transactional
-    public SimpleResponse deleteById(Long resId) {
-        Restaurant restaurant = restaurantRepo.findById(resId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + resId));
-        userRepo.deleteAll(restaurant.getUsers());
-        menuitemRepo.deleteAll(restaurant.getMenuitemList());
-        restaurantRepo.delete(restaurant);
-        return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success deleted").build();
+    @Override
+    public RestaurantResponse findById() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.error(authentication.getName());
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        if (restWithAdmin == null) throw new RuntimeException("YOUR TOKEN INVALID");
+        return restWithAdmin.convert();
+
     }
 
-    @Override @Transactional
-    public SimpleResponse updateById(Long restId, UpdateRestReq updateRestReq, RestaurantType restaurantType) {
-        Restaurant restaurant = restaurantRepo.findById(restId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + restId));
+
+    @Override
+    @Transactional
+    public SimpleResponse updateById(UpdateRestReq updateRestReq, RestaurantType restaurantType) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restaurant = restaurantRepo.getRestWithAdmin(authentication.getName());
+        if (restaurant == null) return SimpleResponse.builder().
+                httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
         if (!Arrays.toString(RestaurantType.values()).contains(restaurantType.name()))
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Restaurant type is invalid select: 'EVROPEISKII,     TURETSKII,     VOSTOCHNYI,     PITSERII,   UZBEKSKII , FASTFOOD'").build();
         restaurant.setName(updateRestReq.name());
         restaurant.setLocation(updateRestReq.location());
         restaurant.setServicePro(updateRestReq.servicePro());
         restaurant.setType(restaurantType);
-        return SimpleResponse.builder().httpStatus(HttpStatus.ACCEPTED).message("Success updated new name: "  + updateRestReq.name()).build();
+        return SimpleResponse.builder().httpStatus(HttpStatus.ACCEPTED).message("Success updated new name: " + updateRestReq.name()).build();
+    }
+
+    @Override
+    @Transactional
+    public SimpleResponse updateById(Long restId, UpdateRestReq updateRestReq, RestaurantType restaurantType) {
+        Restaurant restaurant = restaurantRepo.findById(restId).orElseThrow(() -> new NotFoundException("Restaurant with id: " + restId + "not found!"));
+        if (!Arrays.toString(RestaurantType.values()).contains(restaurantType.name()))
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Restaurant type is invalid select: 'EVROPEISKII,     TURETSKII,     VOSTOCHNYI,     PITSERII,   UZBEKSKII , FASTFOOD'").build();
+        restaurant.setName(updateRestReq.name());
+        restaurant.setLocation(updateRestReq.location());
+        restaurant.setServicePro(updateRestReq.servicePro());
+        restaurant.setType(restaurantType);
+        return SimpleResponse.builder().httpStatus(HttpStatus.ACCEPTED).message("Success updated new name: " + updateRestReq.name()).build();
     }
 
     @Override
     public String checkVacancy(Long restId) {
-        return restaurantRepo.findById(restId).orElseThrow(() ->new NotFoundException("Not found restaurant with id: " + restId)).getUsers().size() >= 15 ? "Vacancy not is restaurant workers full" : "You can send resume" ;
+        return restaurantRepo.findById(restId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + restId)).getUsers().size() >= 15 ? "Vacancy not is restaurant workers full" : "You can send resume";
+    }
+
+    @Override
+    @Transactional
+    public SimpleResponse delete() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restaurant = restaurantRepo.getRestWithAdmin(authentication.getName());
+        if (restaurant == null)
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
+        userRepo.deleteAll(restaurant.getUsers());
+        menuitemRepo.deleteAll(restaurant.getMenuitemList());
+        restaurantRepo.delete(restaurant);
+        return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success deleted").build();
+    }
+
+    @Override
+    public PaginationUserReq getAllReq(int page, int size) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<User> userPage = userRepo.findAll(pageable);
+        List<User> content = userPage.getContent();
+        List<UserPaginationForReq> userResFPag = new ArrayList<>();
+        for (int i = 0; i < content.size(); i++) {
+            Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+            if (restWithAdmin.getRequests().contains(content.get(i))) {
+                log.info("ADDED to PAGINATION! "  + "count:  " + i);
+                userResFPag.add(content.get(i).convertForReq());
+            }
+        }
+        return PaginationUserReq.builder().page(userPage.getNumber() + 1)
+                .size(userPage.getTotalPages()).userRes(userResFPag).
+                build();
+    }
+
+    @Override
+    @Transactional
+    public SimpleResponse reqAccOrRem(Long reqId, ActionForReq action) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        for (User request : restWithAdmin.getRequests()) {
+            if (request.getId().equals(reqId)) {
+                if (action.equals(ActionForReq.ACCEPT)) {
+                    boolean add = restWithAdmin.getUsers().add(request);
+                    log.info(String.valueOf(add));
+                    restWithAdmin.getRequests().remove(request);
+                    log.info(request.getId() + "Success accepted");
+                    return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success accepted request").build();
+                } else {
+                    restWithAdmin.getRequests().remove(request);
+                    userRepo.deleteById(reqId);
+                    log.info(request.getId() + "Success remove in date base");
+                    return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success removed request").build();
+                }
+            }
+        }
+        throw new NotFoundException("This request :" + reqId + " not found!");
+    }
+
+    @Override
+    @Transactional
+    public SimpleResponse deleteById(Long resId) {
+        Restaurant restaurant = restaurantRepo.findById(resId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + resId));
+        userRepo.deleteAll(restaurant.getUsers());
+        menuitemRepo.deleteAll(restaurant.getMenuitemList());
+        restaurantRepo.delete(restaurant);
+        return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success deleted").build();
     }
 }
