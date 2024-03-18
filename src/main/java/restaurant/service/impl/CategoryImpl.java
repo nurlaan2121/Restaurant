@@ -1,7 +1,6 @@
 package restaurant.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,12 +10,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import restaurant.dto.response.SimpleResponse;
-import restaurant.dto.response.UserResForPagination;
 import restaurant.dto.response.category.CategoryPagination;
 import restaurant.dto.response.category.CategoryRes;
 import restaurant.entities.Category;
 import restaurant.entities.Restaurant;
-import restaurant.entities.User;
 import restaurant.exceptions.ForbiddenException;
 import restaurant.exceptions.NotFoundException;
 import restaurant.repository.CategoryRepo;
@@ -102,5 +99,14 @@ public class CategoryImpl implements CategoryService {
             return category.convert();
         }
         throw new ForbiddenException("Forbidden 403 you no can see any category ");
+    }
+
+    @Override
+    public List<CategoryRes> search(String name) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = authentication.getName();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adminEmail);
+        String word  = "%" + name + "%";
+      return   categoryRepo.search(word,restWithAdmin.getId());
     }
 }

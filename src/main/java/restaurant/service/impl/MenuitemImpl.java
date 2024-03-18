@@ -1,6 +1,7 @@
 package restaurant.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import restaurant.dto.response.UserResForPagination;
 import restaurant.dto.response.menuitem.MenuitemPagination;
 import restaurant.dto.response.menuitem.MenuitemRes;
 import restaurant.entities.*;
+import restaurant.enums.Role;
 import restaurant.exceptions.ForbiddenException;
 import restaurant.exceptions.NotFoundException;
 import restaurant.repository.*;
@@ -44,9 +46,25 @@ public class MenuitemImpl implements MenuitemService {
     @Override
     @Transactional
     public SimpleResponse save(MenuitemReq menuitemReq) {
-        String currentAdminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        String currentAdminEmailorChef = SecurityContextHolder.getContext().getAuthentication().getName();
         SubCategory subCategory = mySubCatFindById(menuitemReq.getSubCategory());
-        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(currentAdminEmail);
+        User user = userRepo.findByEmail(currentAdminEmailorChef).orElseThrow(() -> new NotFoundException("This email noty found!"));
+        if (user.getRole().equals(Role.DEV) || user.getRole().equals(Role.WAITER)) {
+            return SimpleResponse.builder().httpStatus(HttpStatus.FORBIDDEN).message("You no can save menuitem!").build();
+        }
+        if (user.getRole().equals(Role.CHEF)) {
+            Restaurant restWithChef = restaurantRepo.getRestWithChef(user.getId());
+            Category category = categoryRepo.getCatByResId(restWithChef.getId());
+            if (!category.getSubCategories().contains(subCategory)) return SimpleResponse.builder().
+                    httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
+            Menuitem menuitem = menuitemReq.convert();
+            menuitemRepo.save(menuitem);
+            subCategory.getMenuitemList().add(menuitem);
+            restWithChef.getMenuitemList().add(menuitem);
+            return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success saved").build();
+
+        }
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(currentAdminEmailorChef);
         Category category = categoryRepo.getCatByResId(restWithAdmin.getId());
         if (!category.getSubCategories().contains(subCategory)) return SimpleResponse.builder().
                 httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
@@ -84,7 +102,8 @@ public class MenuitemImpl implements MenuitemService {
 
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public SimpleResponse delete(Long menuitemId) {
         String adEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adEmail);
@@ -117,5 +136,33 @@ public class MenuitemImpl implements MenuitemService {
         menuitem.setVegetarian(menuitemReq.isVegetarian());
         menuitem.setDescription(menuitemReq.getDescription());
         return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success updated").build();
+    }
+
+    @Override
+    public List<MenuitemRes> search(String name) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = authentication.getName();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adminEmail);
+        String word = "%" + name + "%";
+        return menuitemRepo.search(word, restWithAdmin.getId());
+    }
+
+    @Override
+    public List<MenuitemRes> sortByPrice(String ascOrDesc) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        if (ascOrDesc.equalsIgnoreCase("asc")) {
+            return restaurantRepo.sortByPrice(restWithAdmin.getId());
+        } else if (ascOrDesc.equalsIgnoreCase("desc")) {
+            return restaurantRepo.sortByPriceDesc(restWithAdmin.getId());
+        }
+        throw new RuntimeException("Write asc or desc");
+    }
+
+    @Override
+    public List<MenuitemRes> filterByVega(boolean isVeg) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        return restaurantRepo.filterByVega(restWithAdmin.getId(), isVeg);
     }
 }

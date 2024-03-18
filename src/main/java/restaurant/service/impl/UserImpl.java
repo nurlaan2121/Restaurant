@@ -44,7 +44,6 @@ public class UserImpl implements UserService {
     private final ChequeRepo chequeRepo;
     private final RemoveChequeRepo removeChequeRepo;
     private final RestaurantRepo restaurantRepo;
-
     public User myFindById(Long userId) {
         return userRepo.findById(userId).orElseThrow(() -> new NotFoundException("Wish user not found: " + userId));
     }
@@ -181,10 +180,16 @@ public class UserImpl implements UserService {
             Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
             if (!restWithAdmin.getUsers().contains(findUser))
                 throw new NotFoundException("You no can update this user!");
-            return myUpdate(findUser, userRequest);
+            myUpdate(findUser, userRequest);
+            User user = userRepo.findById(upUsId).get();
+            String token = jwtService.createTokenForStud(user);
+            return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success update YOUR TOKEN: " + token).build();
         }
         User findUser = myFindById(upUsId);
-        return myUpdate(findUser, userRequest);
+        myUpdate(findUser, userRequest);
+        User user = userRepo.findById(upUsId).get();
+        String token = jwtService.createTokenForStud(user);
+        return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success update YOUR TOKEN: " + token).build();
     }
 
     @Override
@@ -240,8 +245,7 @@ public class UserImpl implements UserService {
             }
         }
     }
-
-    private SimpleResponse myUpdate(User findUser, UserRequest userRequest) {
+    private void myUpdate(User findUser, UserRequest userRequest) {
         findUser.setEmail(userRequest.getEmail());
         findUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         findUser.setExperience(userRequest.getExperience());
@@ -250,6 +254,5 @@ public class UserImpl implements UserService {
         findUser.setLastName(userRequest.getLastName());
         findUser.setDateOfBirth(userRequest.getDateOfBirth());
         findUser.setPhoneNumber(userRequest.getPhoneNumber());
-        return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success updated").build();
     }
 }

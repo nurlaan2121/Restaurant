@@ -20,6 +20,7 @@ import restaurant.repository.SubCategoryRepo;
 import restaurant.service.SubCategoryService;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -46,6 +47,9 @@ public class SubCategoryImpl implements SubCategoryService {
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
         if (!restWithAdmin.getCategories().contains(category))
             return SimpleResponse.builder().httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
+        if (subCategoryRepo.existsByName(name, category.getId())) {
+            return SimpleResponse.builder().httpStatus(HttpStatus.CONFLICT).message("This name already exists!  :" + name).build();
+        }
         SubCategory subCategory = new SubCategory(name);
         subCategoryRepo.save(subCategory);
         category.getSubCategories().add(subCategory);
@@ -92,6 +96,9 @@ public class SubCategoryImpl implements SubCategoryService {
         for (int i = 0; i < category.getSubCategories().size(); i++) {
             if (!category.getSubCategories().contains(subCategory))
                 throw new ForbiddenException("Forbidden 403");
+            if (subCategoryRepo.existsByName(name, category.getId())) {
+                return SimpleResponse.builder().httpStatus(HttpStatus.CONFLICT).message("This name already exists!  :" + name).build();
+            }
             subCategory.setName(name);
         }
         return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success deleted!").build();
@@ -104,6 +111,26 @@ public class SubCategoryImpl implements SubCategoryService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
         if (!restWithAdmin.getCategories().contains(category)) throw new ForbiddenException("Forbidden 403");
-       return subCategoryRepo.sortByName(catId);
+        return subCategoryRepo.sortByName(catId);
+    }
+
+    @Override
+    public List<SubCategoryRes> search(String word) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String emailAdmin = authentication.getName();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(emailAdmin);
+        List<Category> categories = restWithAdmin.getCategories();
+        List<SubCategoryRes> resList = new ArrayList<>();
+        for (int i = 0; i < categories.size(); i++) {
+            Category category = categoryRepo.findById(categories.get(i).getId()).get();
+            for (int i1 = 0; i1 < category.getSubCategories().size(); i1++) {
+                Long subCatId = category.getSubCategories().get(i1).getId();
+                SubCategory subCategory = mySubCatFindById(subCatId);
+                if (subCategory.getName().contains(word)) {
+                    resList.add(subCategory.convert());
+                }
+            }
+        }
+        return resList;
     }
 }

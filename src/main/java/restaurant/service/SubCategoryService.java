@@ -16,4 +16,6 @@ public interface SubCategoryService {
     SimpleResponse updateById(Long subCatId,String name);
 
     List<SubCategory> getAllSubcat(Long catId);
+
+    List<SubCategoryRes> search(String s);
 }

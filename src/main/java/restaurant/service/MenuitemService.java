@@ -5,6 +5,8 @@ import restaurant.dto.response.SimpleResponse;
 import restaurant.dto.response.menuitem.MenuitemPagination;
 import restaurant.dto.response.menuitem.MenuitemRes;
 
+import java.util.List;
+
 public interface MenuitemService {
     SimpleResponse save(MenuitemReq menuitemReq);
 
@@ -15,4 +17,10 @@ public interface MenuitemService {
     SimpleResponse delete(Long menuitemId);
 
     SimpleResponse update(Long menuitemId, MenuitemReq menuitemReq);
+
+    List<MenuitemRes> search(String name);
+
+    List<MenuitemRes> sortByPrice(String ascOrDesc);
+
+    List<MenuitemRes> filterByVega(boolean isVeg);
 }

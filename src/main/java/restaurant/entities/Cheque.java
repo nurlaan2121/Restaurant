@@ -5,6 +5,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.*;
+import restaurant.dto.response.cheque.ChequeRes;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
@@ -24,4 +25,8 @@ public class Cheque extends BaseEntity{
     private ZonedDateTime createdAdCheque;
     @ManyToMany
     private List<Menuitem> menuitemList = new ArrayList<>();
+
+    public ChequeRes convert() {
+        return new ChequeRes(this.menuitemList,this.priceAverage);
+    }
 }

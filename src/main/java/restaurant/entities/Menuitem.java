@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @SequenceGenerator(name = "menuitem_id",allocationSize = 1)
+@ToString
 public class Menuitem extends BaseEntity{
     private String name;
     private String image;
@@ -25,6 +26,7 @@ public class Menuitem extends BaseEntity{
     private Long count;
 
     public MenuitemRes convert() {
-        return new MenuitemRes(this.name,this.image,this.price,this.description,this.isVegetarian,this.count);
+        return new MenuitemRes(super.getId(),this.name,this.image,this.price,this.description,this.isVegetarian,this.count);
     }
+
 }
