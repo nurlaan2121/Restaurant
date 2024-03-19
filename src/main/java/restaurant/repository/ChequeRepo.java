@@ -23,4 +23,6 @@ public interface ChequeRepo extends JpaRepository<Cheque, Long> {
 
     @Query("select uch from User u join u.cheques uch where u.id = :userId and uch.createdAdCheque = :date")
     List<Cheque> findByWaiterAndDate(ZonedDateTime date, Long userId);
+    @Query("select c from Cheque c join c.menuitemList cml where cml.id = :id")
+    Cheque getByMen(Long id);
 }

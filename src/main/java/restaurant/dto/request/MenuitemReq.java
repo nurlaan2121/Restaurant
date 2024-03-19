@@ -18,7 +18,7 @@ public class MenuitemReq {
     private String name;
     @NotBlank
     private String image;
-//    @NotNegativeBig
+    @NotNegativeBig
     private BigDecimal price;
     @NotBlank
     private String description;

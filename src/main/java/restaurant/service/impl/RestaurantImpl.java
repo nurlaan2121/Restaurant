@@ -14,15 +14,12 @@ import restaurant.dto.request.RestaurantReq;
 import restaurant.dto.request.UpdateRestReq;
 import restaurant.dto.request.UserReqForRest;
 import restaurant.dto.response.*;
-import restaurant.entities.Restaurant;
-import restaurant.entities.User;
+import restaurant.entities.*;
 import restaurant.enums.ActionForReq;
 import restaurant.enums.RestaurantType;
 import restaurant.enums.Role;
 import restaurant.exceptions.NotFoundException;
-import restaurant.repository.MenuitemRepo;
-import restaurant.repository.RestaurantRepo;
-import restaurant.repository.UserRepo;
+import restaurant.repository.*;
 import restaurant.service.RestaurantService;
 import org.springframework.data.domain.Pageable;
 
@@ -38,6 +35,8 @@ public class RestaurantImpl implements RestaurantService {
     private final RestaurantRepo restaurantRepo;
     private final MenuitemRepo menuitemRepo;
     private final UserRepo userRepo;
+    private final ChequeRepo chequeRepo;
+    private final StopListRepo stopListRepo;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -132,8 +131,19 @@ public class RestaurantImpl implements RestaurantService {
         if (restaurant == null)
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
         userRepo.deleteAll(restaurant.getUsers());
+        List<Menuitem> menuitemList = restaurant.getMenuitemList();
+        for (int i = 0; i < menuitemList.size(); i++) {
+            Long id = menuitemList.get(i).getId();
+            StopList stopList = stopListRepo.get(menuitemList.get(i).getId());
+            if (stopList != null){
+                stopListRepo.delete(stopList);
+            }
+            Cheque cheque = chequeRepo.getByMen(id);
+            chequeRepo.delete(cheque);
+        }
         menuitemRepo.deleteAll(restaurant.getMenuitemList());
         restaurantRepo.delete(restaurant);
+
         return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success deleted").build();
     }
 
@@ -147,7 +157,7 @@ public class RestaurantImpl implements RestaurantService {
         for (int i = 0; i < content.size(); i++) {
             Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
             if (restWithAdmin.getRequests().contains(content.get(i))) {
-                log.info("ADDED to PAGINATION! "  + "count:  " + i);
+                log.info("ADDED to PAGINATION! " + "count:  " + i);
                 userResFPag.add(content.get(i).convertForReq());
             }
         }
@@ -184,6 +194,16 @@ public class RestaurantImpl implements RestaurantService {
     @Transactional
     public SimpleResponse deleteById(Long resId) {
         Restaurant restaurant = restaurantRepo.findById(resId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + resId));
+        List<Menuitem> menuitemList = restaurant.getMenuitemList();
+        for (int i = 0; i < menuitemList.size(); i++) {
+            Long id = menuitemList.get(i).getId();
+            StopList stopList = stopListRepo.get(menuitemList.get(i).getId());
+            if (stopList != null){
+                stopListRepo.delete(stopList);
+            }
+            Cheque cheque = chequeRepo.getByMen(id);
+            chequeRepo.delete(cheque);
+        }
         userRepo.deleteAll(restaurant.getUsers());
         menuitemRepo.deleteAll(restaurant.getMenuitemList());
         restaurantRepo.delete(restaurant);

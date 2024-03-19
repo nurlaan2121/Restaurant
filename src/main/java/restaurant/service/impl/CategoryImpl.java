@@ -1,6 +1,7 @@
 package restaurant.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import restaurant.repository.CategoryRepo;
 import restaurant.repository.RestaurantRepo;
 import restaurant.service.CategoryService;
 
+import java.nio.channels.AlreadyBoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +43,10 @@ public class CategoryImpl implements CategoryService {
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        Category existsByName =  categoryRepo.getByName(restWithAdmin.getId(),category);
+        if (existsByName!=null){
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Name already exists : " + category).build();
+        }
         Category entityCat = new Category(category);
         categoryRepo.save(entityCat);
         restWithAdmin.getCategories().add(entityCat);
@@ -63,6 +69,15 @@ public class CategoryImpl implements CategoryService {
     @Override
     @Transactional
     public SimpleResponse update(Long categoryId, String name) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        Category existsByName =  categoryRepo.getByName(restWithAdmin.getId(),name);
+        if (existsByName!=null){
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Name already exists : " + name).build();
+        }
+        if (name.length() < 2) {
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Write correct category ").build();
+        }
         Category category = myFindById(categoryId);
         category.setName(name);
         return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success updated").build();

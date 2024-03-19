@@ -54,7 +54,7 @@ public class MenuitemImpl implements MenuitemService {
         }
         if (user.getRole().equals(Role.CHEF)) {
             Restaurant restWithChef = restaurantRepo.getRestWithChef(user.getId());
-            Category category = categoryRepo.getCatByResId(restWithChef.getId());
+            Category category = categoryRepo.getCatByResId(restWithChef.getId(),subCategory.getId());
             if (!category.getSubCategories().contains(subCategory)) return SimpleResponse.builder().
                     httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
             Menuitem menuitem = menuitemReq.convert();
@@ -65,7 +65,7 @@ public class MenuitemImpl implements MenuitemService {
 
         }
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(currentAdminEmailorChef);
-        Category category = categoryRepo.getCatByResId(restWithAdmin.getId());
+        Category category = categoryRepo.getCatByResId(restWithAdmin.getId(),subCategory.getId());
         if (!category.getSubCategories().contains(subCategory)) return SimpleResponse.builder().
                 httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
         Menuitem menuitem = menuitemReq.convert();

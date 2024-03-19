@@ -61,7 +61,7 @@ public class SubCategoryImpl implements SubCategoryService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         SubCategory subCategory = mySubCatFindById(subCatId);
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        Category category = categoryRepo.getCatByResId(restWithAdmin.getId());
+        Category category = categoryRepo.getCatByResId(restWithAdmin.getId(),subCategory.getId());
         for (int i = 0; i < category.getSubCategories().size(); i++) {
             if (!category.getSubCategories().contains(subCategory))
                 throw new ForbiddenException("Forbidden 403");
@@ -75,7 +75,7 @@ public class SubCategoryImpl implements SubCategoryService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         SubCategory subCategory = mySubCatFindById(subCatId);
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        Category category = categoryRepo.getCatByResId(restWithAdmin.getId());
+        Category category = categoryRepo.getCatByResId(restWithAdmin.getId(),subCategory.getId());
         for (int i = 0; i < category.getSubCategories().size(); i++) {
             if (!category.getSubCategories().contains(subCategory))
                 throw new ForbiddenException("Forbidden 403");
@@ -92,7 +92,7 @@ public class SubCategoryImpl implements SubCategoryService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         SubCategory subCategory = mySubCatFindById(subCatId);
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        Category category = categoryRepo.getCatByResId(restWithAdmin.getId());
+        Category category = categoryRepo.getCatByResId(restWithAdmin.getId(),subCategory.getId());
         for (int i = 0; i < category.getSubCategories().size(); i++) {
             if (!category.getSubCategories().contains(subCategory))
                 throw new ForbiddenException("Forbidden 403");

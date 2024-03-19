@@ -173,6 +173,9 @@ public class UserImpl implements UserService {
     public SimpleResponse updateUserById(Long upUsId, UserRequest userRequest) {
         if (userRequest.getRole().equals(Role.ADMIN) || userRequest.getRole().equals(Role.DEV))
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Invalid role!").build();
+        if (!userRepo.existByEmail(userRequest.getEmail()))
+            return SimpleResponse.builder().httpStatus(HttpStatus.CONFLICT).
+                    message("Email already exists: " + userRequest.getEmail() + " !").build();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User adminOrDev = userRepo.findByEmail(authentication.getName()).orElseThrow(() -> new NotFoundException("Your token invalid"));
         if (adminOrDev.getRole().equals(Role.ADMIN)) {

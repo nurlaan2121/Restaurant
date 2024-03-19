@@ -2,6 +2,7 @@ package restaurant.api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import restaurant.dto.request.CategoryReq;
 import restaurant.dto.response.SimpleResponse;
 import restaurant.dto.response.category.CategoryPagination;
 import restaurant.dto.response.category.CategoryRes;
@@ -16,8 +17,8 @@ public class CategoryApi {
     private final CategoryService categoryService;
     @Secured("ADMIN")
     @PostMapping("/save")
-    public SimpleResponse save(@RequestBody String name){
-        return categoryService.save(name);
+    public SimpleResponse save(@RequestBody CategoryReq name){
+        return categoryService.save(name.name());
     }
     @Secured("ADMIN")
     @DeleteMapping("/deleteById/{categoryId}")
@@ -27,8 +28,8 @@ public class CategoryApi {
 
     @Secured("ADMIN")
     @PutMapping("/updateById{categoryId}")
-    public SimpleResponse updateById(@PathVariable Long categoryId,String name){
-        return categoryService.update(categoryId,name);
+    public SimpleResponse updateById(@PathVariable Long categoryId,CategoryReq name){
+        return categoryService.update(categoryId,name.name());
     }
     @Secured("ADMIN")
     @GetMapping("/getMyCategories")

@@ -3,6 +3,7 @@ package restaurant.api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
+import restaurant.dto.request.SupCategoryReq;
 import restaurant.dto.response.SimpleResponse;
 import restaurant.dto.response.supcategory.SubCategoryRes;
 import restaurant.entities.SubCategory;
@@ -17,8 +18,8 @@ public class SubCategoryApi {
     private final SubCategoryService subCategoryService;
     @Secured("ADMIN")
     @PostMapping("/save/{catId}")
-    public SimpleResponse save(@PathVariable Long catId, @RequestBody String name) {
-        return subCategoryService.save(catId, name);
+    public SimpleResponse save(@PathVariable Long catId, @RequestBody SupCategoryReq name) {
+        return subCategoryService.save(catId, name.name());
     }
     @Secured("ADMIN")
     @GetMapping("/findById/{subCatId}")
@@ -32,8 +33,8 @@ public class SubCategoryApi {
     }
     @Secured("ADMIN")
     @PutMapping("/update/{subCatId}")
-    public SimpleResponse updateById(@PathVariable Long subCatId,@RequestBody String name){
-        return subCategoryService.updateById(subCatId,name);
+    public SimpleResponse updateById(@PathVariable Long subCatId,@RequestBody SupCategoryReq name){
+        return subCategoryService.updateById(subCatId,name.name());
     }
     @Secured("ADMIN")
     @GetMapping("/getAllSubCat/{catId}")

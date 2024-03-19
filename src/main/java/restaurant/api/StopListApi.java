@@ -2,7 +2,6 @@ package restaurant.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.*;
 import restaurant.dto.response.SimpleResponse;
 import restaurant.service.StopListService;
@@ -18,7 +17,7 @@ public class StopListApi {
         return stopListService.update(count,menuitemId);
     }
     @Secured("ADMIN")
-    @PutMapping("updateReason/{stopListId}")
+    @PutMapping("/updateReason/{stopListId}")
     public SimpleResponse updRea(@PathVariable Long stopListId,@RequestBody String newReason){
         return stopListService.updateReason(stopListId,newReason);
 

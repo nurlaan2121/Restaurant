@@ -23,4 +23,6 @@ public interface StopListRepo extends JpaRepository<StopList, Long> {
 
     @Query("select s from Restaurant r join r.menuitemList rml join StopList s on s.menuitem.id = rml.id where r.admin.email = :emailAdmin and s.id =:stopListId")
     StopList getByIdStopListIdId(Long stopListId, String emailAdmin);
+    @Query("select s from StopList s join s.menuitem sm where sm.id = :id")
+    StopList get(Long id);
 }
