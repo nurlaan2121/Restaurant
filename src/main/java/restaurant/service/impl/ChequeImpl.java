@@ -17,6 +17,7 @@ import restaurant.repository.*;
 import restaurant.service.ChequeService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +96,7 @@ public class ChequeImpl implements ChequeService {
     }
 
     @Override
-    public BigDecimal getTotalSum(Long waiterId) {
+    public BigDecimal getTotalSum(Long waiterId, LocalDate date) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restaurant = restaurantRepo.getRestWithAdmin(authentication.getName());
         User waiter = userRepo.findById(waiterId).orElseThrow(() -> new NotFoundException("This waiter not found!" + waiterId));
@@ -104,17 +105,21 @@ public class ChequeImpl implements ChequeService {
         List<Cheque> cheques = waiter.getCheques();
         BigDecimal resultSum = new BigDecimal(0);
         for (int i = 0; i < cheques.size(); i++) {
-            Cheque cheque = myFindById(cheques.get(i).getId());
-            resultSum = resultSum.add(cheque.getPriceAverage());
+            int paramDay = date.getDayOfMonth();
+            int day = cheques.get(i).getCreatedAdCheque().getDayOfMonth();
+            if (day == paramDay) {
+                Cheque cheque = myFindById(cheques.get(i).getId());
+                resultSum = resultSum.add(cheque.getPriceAverage());
+            }
         }
         return resultSum;
     }
 
     @Override
-    public BigDecimal getAvg() {
+    public BigDecimal getAvg(LocalDate date) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-      return chequeRepo.getAvg(restWithAdmin.getId());
+        return chequeRepo.getAvg(restWithAdmin.getId(),date);
     }
 
 }

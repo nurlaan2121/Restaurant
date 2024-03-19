@@ -1,7 +1,6 @@
 package restaurant.entities;
 import jakarta.persistence.*;
 import lombok.*;
-import restaurant.dto.response.category.CategoryPagination;
 import restaurant.dto.response.category.CategoryRes;
 
 import java.util.ArrayList;

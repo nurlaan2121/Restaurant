@@ -3,13 +3,24 @@ package restaurant.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import restaurant.entities.Cheque;
+import restaurant.entities.User;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.List;
 
-public interface ChequeRepo extends JpaRepository<Cheque,Long> {
+public interface ChequeRepo extends JpaRepository<Cheque, Long> {
     @Query("select c from User u join u.cheques c where u.id = :userId")
     List<Cheque> findAllByUserId(Long userId);
-    @Query("select avg (rusch.priceAverage) from Restaurant r join r.users rus join rus.cheques rusch where r.id = :id")
-    BigDecimal getAvg(Long id);
+
+    default BigDecimal getAvg(Long id, LocalDate date) {
+        return getAvg2(id, date.getDayOfMonth());
+    }
+
+    @Query("SELECT AVG(rusch.priceAverage) FROM Restaurant r JOIN r.users rus JOIN rus.cheques rusch WHERE r.id = :id AND DAY(rusch.createdAdCheque) = :dayOfMonth")
+    BigDecimal getAvg2(Long id, int dayOfMonth);
+
+    @Query("select uch from User u join u.cheques uch where u.id = :userId and uch.createdAdCheque = :date")
+    List<Cheque> findByWaiterAndDate(ZonedDateTime date, Long userId);
 }

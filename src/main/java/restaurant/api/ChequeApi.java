@@ -1,8 +1,10 @@
 package restaurant.api;
 
+import io.swagger.annotations.ApiParam;
 import jdk.dynalink.linker.support.SimpleLinkRequest;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 import restaurant.dto.request.ChequeReq;
@@ -11,6 +13,8 @@ import restaurant.dto.response.cheque.ChequeRes;
 import restaurant.service.ChequeService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/cheque")
@@ -29,16 +33,14 @@ public class ChequeApi {
     public ChequeRes getById(@PathVariable Long chequeId) {
         return chequeService.getById(chequeId);
     }
-
     @Secured("ADMIN")
-    @GetMapping("/getTotalSumOneDay/{waiterId}")
-    public BigDecimal getTotalSum(@PathVariable Long waiterId) {
-        return chequeService.getTotalSum(waiterId);
+    @GetMapping("/getTotalSumOneDay/{waiterId}/{date}")
+    public BigDecimal getTotalSum(@PathVariable Long waiterId, @PathVariable LocalDate date) {
+        return chequeService.getTotalSum(waiterId,date);
     }
-
     @Secured("ADMIN")
-    @GetMapping("/getAvgSum")
-    public BigDecimal getAvg() {
-        return chequeService.getAvg();
+    @GetMapping("/getAvgSum/{date}")
+    public BigDecimal getAvg(@PathVariable LocalDate date) {
+        return chequeService.getAvg(date);
     }
 }
