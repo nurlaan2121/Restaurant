@@ -130,16 +130,24 @@ public class RestaurantImpl implements RestaurantService {
         Restaurant restaurant = restaurantRepo.getRestWithAdmin(authentication.getName());
         if (restaurant == null)
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
+        for (int i = 0; i < restaurant.getUsers().size(); i++) {
+            List<Cheque> cheques = restaurant.getUsers().get(i).getCheques();
+            restaurant.getUsers().get(i).getCheques().clear();
+            log.info(String.valueOf(cheques.size()));
+            chequeRepo.deleteAll(cheques);
+        }
         userRepo.deleteAll(restaurant.getUsers());
         List<Menuitem> menuitemList = restaurant.getMenuitemList();
         for (int i = 0; i < menuitemList.size(); i++) {
             Long id = menuitemList.get(i).getId();
             StopList stopList = stopListRepo.get(menuitemList.get(i).getId());
-            if (stopList != null){
+            if (stopList != null) {
                 stopListRepo.delete(stopList);
             }
             Cheque cheque = chequeRepo.getByMen(id);
-            chequeRepo.delete(cheque);
+            if (cheque != null) {
+                chequeRepo.delete(cheque);
+            }
         }
         menuitemRepo.deleteAll(restaurant.getMenuitemList());
         restaurantRepo.delete(restaurant);
@@ -194,19 +202,30 @@ public class RestaurantImpl implements RestaurantService {
     @Transactional
     public SimpleResponse deleteById(Long resId) {
         Restaurant restaurant = restaurantRepo.findById(resId).orElseThrow(() -> new NotFoundException("Not found restaurant with id: " + resId));
+        if (restaurant == null)
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
+        for (int i = 0; i < restaurant.getUsers().size(); i++) {
+            List<Cheque> cheques = restaurant.getUsers().get(i).getCheques();
+            restaurant.getUsers().get(i).getCheques().clear();
+            log.info(String.valueOf(cheques.size()));
+            chequeRepo.deleteAll(cheques);
+        }
+        userRepo.deleteAll(restaurant.getUsers());
         List<Menuitem> menuitemList = restaurant.getMenuitemList();
         for (int i = 0; i < menuitemList.size(); i++) {
             Long id = menuitemList.get(i).getId();
             StopList stopList = stopListRepo.get(menuitemList.get(i).getId());
-            if (stopList != null){
+            if (stopList != null) {
                 stopListRepo.delete(stopList);
             }
             Cheque cheque = chequeRepo.getByMen(id);
-            chequeRepo.delete(cheque);
+            if (cheque != null) {
+                chequeRepo.delete(cheque);
+            }
         }
-        userRepo.deleteAll(restaurant.getUsers());
         menuitemRepo.deleteAll(restaurant.getMenuitemList());
         restaurantRepo.delete(restaurant);
+
         return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success deleted").build();
     }
 }

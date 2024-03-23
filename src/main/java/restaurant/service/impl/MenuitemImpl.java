@@ -33,6 +33,8 @@ public class MenuitemImpl implements MenuitemService {
     private final RestaurantRepo restaurantRepo;
     private final SubCategoryRepo subCategoryRepo;
     private final CategoryRepo categoryRepo;
+    private final StopListRepo stopListRepo;
+    private final ChequeRepo chequeRepo;
 
     private SubCategory mySubCatFindById(Long supCatId) {
         return subCategoryRepo.findById(supCatId).orElseThrow(() -> new NotFoundException("With Sub Category not found" + supCatId));
@@ -54,7 +56,10 @@ public class MenuitemImpl implements MenuitemService {
         }
         if (user.getRole().equals(Role.CHEF)) {
             Restaurant restWithChef = restaurantRepo.getRestWithChef(user.getId());
-            Category category = categoryRepo.getCatByResId(restWithChef.getId(),subCategory.getId());
+            Menuitem exFind = menuitemRepo.findByName(menuitemReq.getName(),restWithChef.getId());
+            if (exFind != null)
+                return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("This name already exists!").build();
+            Category category = categoryRepo.getCatByResId(restWithChef.getId(), subCategory.getId());
             if (!category.getSubCategories().contains(subCategory)) return SimpleResponse.builder().
                     httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
             Menuitem menuitem = menuitemReq.convert();
@@ -65,7 +70,10 @@ public class MenuitemImpl implements MenuitemService {
 
         }
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(currentAdminEmailorChef);
-        Category category = categoryRepo.getCatByResId(restWithAdmin.getId(),subCategory.getId());
+        Menuitem exFind = menuitemRepo.findByName(menuitemReq.getName(),restWithAdmin.getId());
+        if (exFind != null)
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("This name already exists!").build();
+        Category category = categoryRepo.getCatByResId(restWithAdmin.getId(), subCategory.getId());
         if (!category.getSubCategories().contains(subCategory)) return SimpleResponse.builder().
                 httpStatus(HttpStatus.FORBIDDEN).message("Forbidden 403").build();
         Menuitem menuitem = menuitemReq.convert();
@@ -89,13 +97,13 @@ public class MenuitemImpl implements MenuitemService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Menuitem> menuitemPage = menuitemRepo.findAll(pageable);
+        Page<Menuitem> menuitemPage = menuitemRepo.findAllByRestaurantId(restWithAdmin.getId(),pageable);
         List<Menuitem> content = menuitemPage.getContent();
         List<MenuitemRes> menuitemRes = new ArrayList<>();
         for (int i = 0; i < content.size(); i++) {
-            if (restWithAdmin.getMenuitemList().contains(content.get(i))) {
+//            if (restWithAdmin.getMenuitemList().contains(content.get(i))) {
                 menuitemRes.add(content.get(i).convert());
-            }
+//            }
         }
         return MenuitemPagination.builder().page(menuitemPage.getNumber() + 1).
                 size(menuitemPage.getTotalPages()).menuitemRes(menuitemRes).build();
@@ -108,6 +116,12 @@ public class MenuitemImpl implements MenuitemService {
         String adEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adEmail);
         Menuitem menuitem = myFindById(menuitemId);
+        StopList stopList = stopListRepo.get(menuitem.getId());
+        if (stopList != null) {
+            stopListRepo.delete(stopList);
+        }
+        Cheque byMen = chequeRepo.getByMen(menuitemId);
+        byMen.getMenuitemList().clear();
         if (!restWithAdmin.getMenuitemList().contains(menuitem)) throw new ForbiddenException("Forbidden 403");
         restWithAdmin.getMenuitemList().remove(menuitem);
         List<SubCategory> subCategoryList = subCategoryRepo.getByMenuitemId();
@@ -127,6 +141,9 @@ public class MenuitemImpl implements MenuitemService {
     public SimpleResponse update(Long menuitemId, MenuitemReq menuitemReq) {
         String adEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adEmail);
+        Menuitem exFind = menuitemRepo.findByName(menuitemReq.getName(),restWithAdmin.getId());
+        if (exFind != null)
+            return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("This name already exists!").build();
         Menuitem menuitem = myFindById(menuitemId);
         if (!restWithAdmin.getMenuitemList().contains(menuitem)) throw new ForbiddenException("Forbidden 403");
         menuitem.setCount(menuitemReq.getCount());

@@ -53,7 +53,7 @@ public class RestaurantApi {
     }
     @Secured("DEV")
     @PutMapping("/update{restId}")
-    public SimpleResponse update(@PathVariable Long restId,@RequestBody UpdateRestReq updateRestReq,@RequestParam RestaurantType restaurantType){
+    public SimpleResponse update(@PathVariable Long restId,@RequestBody @Valid UpdateRestReq updateRestReq,@RequestParam RestaurantType restaurantType){
         return restaurantService.updateById(restId,updateRestReq,restaurantType);
     }
     @Secured("ADMIN")

@@ -32,7 +32,7 @@ public class User extends BaseEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
     private Long experience;
-    @OneToMany()
+    @OneToMany(cascade = {CascadeType.REMOVE})
     private List<Cheque> cheques = new ArrayList<>();
 
 

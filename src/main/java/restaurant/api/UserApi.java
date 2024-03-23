@@ -1,5 +1,4 @@
 package restaurant.api;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import restaurant.dto.response.UserResponse;
 import restaurant.enums.Role;
 import restaurant.service.RestaurantService;
 import restaurant.service.UserService;
-
 import java.security.Principal;
 
 @RequiredArgsConstructor

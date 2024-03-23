@@ -1,5 +1,7 @@
 package restaurant.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import restaurant.dto.response.category.CategoryRes;
@@ -23,4 +25,7 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
     List<CategoryRes> search(String word, Long restId);
     @Query("select rcs from Restaurant r join r.categories rcs where r.id = :id and rcs.name = :category")
     Category getByName(Long id, String category);
+
+    @Query("SELECT rcs FROM Restaurant r join r.categories rcs WHERE r.id = :restaurantId")
+    Page<Category> findAllByRestaurantId(Long restaurantId, Pageable pageable);
 }

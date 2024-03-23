@@ -44,6 +44,7 @@ public class UserImpl implements UserService {
     private final ChequeRepo chequeRepo;
     private final RemoveChequeRepo removeChequeRepo;
     private final RestaurantRepo restaurantRepo;
+
     public User myFindById(Long userId) {
         return userRepo.findById(userId).orElseThrow(() -> new NotFoundException("Wish user not found: " + userId));
     }
@@ -199,16 +200,15 @@ public class UserImpl implements UserService {
     public UserPagination getAll(int page, int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<User> userPage = userRepo.findAll(pageable);
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        Page<User> userPage = userRepo.findAllByRestaurantId(pageable, restWithAdmin.getId());
         List<User> content = userPage.getContent();
         List<UserResForPagination> userResFPag = new ArrayList<>();
         for (int i = 0; i < content.size(); i++) {
-            Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
             if (restWithAdmin.getUsers().contains(content.get(i))) {
-                if (!content.get(i).getRole().equals(Role.ADMIN)) {
-                    log.error("ADMINDI SALBAI ATAT");
-                    userResFPag.add(content.get(i).convertForRes());
-                }
+//                if (!content.get(i).getRole().equals(Role.ADMIN)) {
+                userResFPag.add(content.get(i).convertForRes());
+//                }
             }
         }
         return UserPagination.builder().page(userPage.getNumber() + 1)
@@ -248,6 +248,7 @@ public class UserImpl implements UserService {
             }
         }
     }
+
     private void myUpdate(User findUser, UserRequest userRequest) {
         findUser.setEmail(userRequest.getEmail());
         findUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));

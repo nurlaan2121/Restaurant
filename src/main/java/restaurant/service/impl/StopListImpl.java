@@ -32,6 +32,7 @@ public class StopListImpl implements StopListService {
 
     @Override @Transactional
     public SimpleResponse update(Long count, Long menuitemId) {
+        if (count<=0) return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Write correct count!").build();
         String adminOrChef = SecurityContextHolder.getContext().getAuthentication().getName();
         User adOrChe = userRepo.findByEmail(adminOrChef).orElseThrow(() -> new RuntimeException("Your token invalid!"));
         if (adOrChe.getRole().equals(Role.CHEF)){
@@ -54,6 +55,7 @@ public class StopListImpl implements StopListService {
 
     @Override @Transactional
     public SimpleResponse updateReason(Long stopListId, String newReason) {
+        if (newReason.length()<5) return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Write correct reason").build();
         String emailAdmin = SecurityContextHolder.getContext().getAuthentication().getName();
         StopList stopList = stopListRepo.getByIdStopListIdId(stopListId,emailAdmin);
         if (stopList == null) throw new NotFoundException("This stop list not found : " + stopListId);

@@ -1,5 +1,6 @@
 package restaurant.api;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class SubCategoryApi {
     private final SubCategoryService subCategoryService;
     @Secured("ADMIN")
     @PostMapping("/save/{catId}")
-    public SimpleResponse save(@PathVariable Long catId, @RequestBody SupCategoryReq name) {
+    public SimpleResponse save(@PathVariable Long catId, @RequestBody @Valid SupCategoryReq name) {
         return subCategoryService.save(catId, name.name());
     }
     @Secured("ADMIN")
@@ -33,7 +34,7 @@ public class SubCategoryApi {
     }
     @Secured("ADMIN")
     @PutMapping("/update/{subCatId}")
-    public SimpleResponse updateById(@PathVariable Long subCatId,@RequestBody SupCategoryReq name){
+    public SimpleResponse updateById(@PathVariable Long subCatId,@RequestBody @Valid SupCategoryReq name){
         return subCategoryService.updateById(subCatId,name.name());
     }
     @Secured("ADMIN")

@@ -87,17 +87,18 @@ public class CategoryImpl implements CategoryService {
     public CategoryPagination getMyCats(int page, int size) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Category> catePage = categoryRepo.findAll(pageable);
+        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+        Page<Category> catePage = categoryRepo.findAllByRestaurantId(restWithAdmin.getId(),pageable);
         List<Category> content = catePage.getContent();
         List<CategoryRes> categoryPaginationList = new ArrayList<>();
-        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        List<Category> categories = restWithAdmin.getCategories();
+//        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
+//        List<Category> categories = restWithAdmin.getCategories();
         for (int i = 0; i < content.size(); i++) {
-            if (categories.contains(content.get(i))) {
+//            if (categories.contains(content.get(i))) {
                 CategoryRes categoryRes = content.get(i).convert();
                 categoryRes.setId(content.get(i).getId());
                 categoryPaginationList.add(categoryRes);
-            }
+//            }
         }
         return CategoryPagination.builder().page(catePage.getNumber() + 1).
                 size(catePage.getTotalPages()).categoryRes(categoryPaginationList).
