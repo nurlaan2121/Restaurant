@@ -18,8 +18,10 @@ public interface UserRepo extends JpaRepository<User, Long> {
         User user = findByEmail(email).orElse(null);
         return user == null;
     }
+
     @Query("select rus from Restaurant r join r.users rus where r.id = :restId and rus.role = 'WAITER' or rus.role = 'CHEF'")
-    Page<User> findAllByRestaurantId(Pageable pageable,Long restId);
+    Page<User> findAllByRestaurantId(Pageable pageable, Long restId);
 
-
+    @Query("select u from User u join u.cheques uch where uch.id = :id")
+    User findByCheckId(Long id);
 }

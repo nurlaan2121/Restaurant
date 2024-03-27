@@ -1,8 +1,9 @@
 package restaurant.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
 @Builder
-public record CategoryReq(String name) {
+public record CategoryReq(@NotBlank String name) {
 
 }

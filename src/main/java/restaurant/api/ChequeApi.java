@@ -43,4 +43,9 @@ public class ChequeApi {
     public BigDecimal getAvg(@PathVariable LocalDate date) {
         return chequeService.getAvg(date);
     }
+    @Secured("ADMIN")
+    @PutMapping("/updateCheck/{checkId}")
+    public SimpleResponse update(@PathVariable Long checkId,@RequestBody ChequeReq chequeReq){
+        return chequeService.update(checkId,chequeReq);
+    }
 }

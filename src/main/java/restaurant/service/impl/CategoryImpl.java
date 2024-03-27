@@ -43,8 +43,8 @@ public class CategoryImpl implements CategoryService {
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        Category existsByName =  categoryRepo.getByName(restWithAdmin.getId(),category);
-        if (existsByName!=null){
+        Category existsByName = categoryRepo.getByName(restWithAdmin.getId(), category);
+        if (existsByName != null) {
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Name already exists : " + category).build();
         }
         Category entityCat = new Category(category);
@@ -71,8 +71,8 @@ public class CategoryImpl implements CategoryService {
     public SimpleResponse update(Long categoryId, String name) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        Category existsByName =  categoryRepo.getByName(restWithAdmin.getId(),name);
-        if (existsByName!=null){
+        Category existsByName = categoryRepo.getByName(restWithAdmin.getId(), name);
+        if (existsByName != null) {
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("Name already exists : " + name).build();
         }
         if (name.length() < 2) {
@@ -88,16 +88,16 @@ public class CategoryImpl implements CategoryService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Pageable pageable = PageRequest.of(page - 1, size);
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        Page<Category> catePage = categoryRepo.findAllByRestaurantId(restWithAdmin.getId(),pageable);
+        Page<Category> catePage = categoryRepo.findAllByRestaurantId(restWithAdmin.getId(), pageable);
         List<Category> content = catePage.getContent();
         List<CategoryRes> categoryPaginationList = new ArrayList<>();
 //        Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
 //        List<Category> categories = restWithAdmin.getCategories();
         for (int i = 0; i < content.size(); i++) {
 //            if (categories.contains(content.get(i))) {
-                CategoryRes categoryRes = content.get(i).convert();
-                categoryRes.setId(content.get(i).getId());
-                categoryPaginationList.add(categoryRes);
+            CategoryRes categoryRes = content.get(i).convert();
+            categoryRes.setId(content.get(i).getId());
+            categoryPaginationList.add(categoryRes);
 //            }
         }
         return CategoryPagination.builder().page(catePage.getNumber() + 1).
@@ -122,7 +122,7 @@ public class CategoryImpl implements CategoryService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String adminEmail = authentication.getName();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(adminEmail);
-        String word  = "%" + name + "%";
-      return   categoryRepo.search(word,restWithAdmin.getId());
+        String word = "%" + name + "%";
+        return categoryRepo.search(word, restWithAdmin.getId());
     }
 }

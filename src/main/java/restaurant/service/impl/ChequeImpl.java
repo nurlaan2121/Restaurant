@@ -119,7 +119,42 @@ public class ChequeImpl implements ChequeService {
     public BigDecimal getAvg(LocalDate date) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Restaurant restWithAdmin = restaurantRepo.getRestWithAdmin(authentication.getName());
-        return chequeRepo.getAvg(restWithAdmin.getId(),date);
+        return chequeRepo.getAvg(restWithAdmin.getId(), date);
+    }
+
+    @Override
+    @Transactional
+    public SimpleResponse update(Long checkId, ChequeReq chequeReq) {
+        Cheque cheque = myFindById(checkId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Restaurant restaurant = restaurantRepo.getRestWithWaiter(authentication.getName());
+        User waiter = userRepo.findByCheckId(cheque.getId());
+        List<Long> menuitemList = chequeReq.getMenuitemList();
+        List<Menuitem> ordersFood = new ArrayList<>();
+        BigDecimal totalPrice = new BigDecimal(0);
+        if (!restaurant.getUsers().contains(waiter))
+            return SimpleResponse.builder().httpStatus(HttpStatus.FORBIDDEN).message("403 forbidden").build();
+        for (int i = 0; i < menuitemList.size(); i++) {
+            Menuitem menuitem = menuitemRepo.findById(menuitemList.get(i)).orElseThrow(() -> new NotFoundException("Not found menuitem"));
+            if (!restaurant.getMenuitemList().contains(menuitem))
+                return SimpleResponse.builder().httpStatus(HttpStatus.FORBIDDEN).message("You no can order food any rest").build();
+            if (!stopListRepo.checkWithMenuitemId(menuitem.getId())) {
+                return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("This menuitem the end  :" + menuitem.getName()).build();
+            }
+            menuitem.setCount(menuitem.getCount() - 1);
+            log.error(String.valueOf(menuitem.getCount()));
+            if (menuitem.getCount() == 0) {
+                StopList stopList = new StopList("The end", ZonedDateTime.now(), menuitem);
+                stopListRepo.save(stopList);
+            }
+            totalPrice = totalPrice.add(menuitem.getPrice());
+            ordersFood.add(menuitem);
+        }
+        cheque.setPriceAverage(totalPrice);
+        cheque.setMenuitemList(ordersFood);
+        cheque.setCreatedAdCheque(ZonedDateTime.from(LocalDate.now()));
+        chequeRepo.save(cheque);
+        return SimpleResponse.builder().httpStatus(HttpStatus.OK).message("Success saved").build();
     }
 
 }

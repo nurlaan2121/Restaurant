@@ -1,4 +1,5 @@
 package restaurant.api;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class CategoryApi {
     private final CategoryService categoryService;
     @Secured("ADMIN")
     @PostMapping("/save")
-    public SimpleResponse save(@RequestBody CategoryReq name){
+    public SimpleResponse save(@RequestBody @Valid CategoryReq name){
         return categoryService.save(name.name());
     }
     @Secured("ADMIN")
@@ -28,7 +29,7 @@ public class CategoryApi {
 
     @Secured("ADMIN")
     @PutMapping("/updateById{categoryId}")
-    public SimpleResponse updateById(@PathVariable Long categoryId,CategoryReq name){
+    public SimpleResponse updateById(@PathVariable Long categoryId,@RequestBody @Valid CategoryReq name){
         return categoryService.update(categoryId,name.name());
     }
     @Secured("ADMIN")

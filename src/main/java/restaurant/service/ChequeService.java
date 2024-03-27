@@ -16,4 +16,6 @@ public interface ChequeService {
     BigDecimal getTotalSum(Long waiterId, LocalDate date);
 
     BigDecimal getAvg(LocalDate date);
+
+    SimpleResponse update(Long checkId, ChequeReq chequeReq);
 }
