@@ -132,7 +132,8 @@ public class RestaurantImpl implements RestaurantService {
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
         for (int i = 0; i < restaurant.getUsers().size(); i++) {
             List<Cheque> cheques = restaurant.getUsers().get(i).getCheques();
-            restaurant.getUsers().get(i).getCheques().clear();
+            cheques.forEach(cheque -> cheque.setMenuitemList(null));
+            restaurant.getUsers().get(i).setCheques(null);
             log.info(String.valueOf(cheques.size()));
             chequeRepo.deleteAll(cheques);
         }
@@ -144,10 +145,7 @@ public class RestaurantImpl implements RestaurantService {
             if (stopList != null) {
                 stopListRepo.delete(stopList);
             }
-            Cheque cheque = chequeRepo.getByMen(id);
-            if (cheque != null) {
-                chequeRepo.delete(cheque);
-            }
+
         }
         menuitemRepo.deleteAll(restaurant.getMenuitemList());
         restaurantRepo.delete(restaurant);
@@ -206,7 +204,8 @@ public class RestaurantImpl implements RestaurantService {
             return SimpleResponse.builder().httpStatus(HttpStatus.BAD_REQUEST).message("YOUR TOKEN INVALID").build();
         for (int i = 0; i < restaurant.getUsers().size(); i++) {
             List<Cheque> cheques = restaurant.getUsers().get(i).getCheques();
-            restaurant.getUsers().get(i).getCheques().clear();
+            cheques.forEach(cheque -> cheque.setMenuitemList(null));
+            restaurant.getUsers().get(i).setCheques(null);
             log.info(String.valueOf(cheques.size()));
             chequeRepo.deleteAll(cheques);
         }
@@ -218,10 +217,7 @@ public class RestaurantImpl implements RestaurantService {
             if (stopList != null) {
                 stopListRepo.delete(stopList);
             }
-            Cheque cheque = chequeRepo.getByMen(id);
-            if (cheque != null) {
-                chequeRepo.delete(cheque);
-            }
+
         }
         menuitemRepo.deleteAll(restaurant.getMenuitemList());
         restaurantRepo.delete(restaurant);
